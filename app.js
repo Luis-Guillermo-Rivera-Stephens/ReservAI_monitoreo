@@ -18,21 +18,22 @@ async function main() {
 
         for (const row of result.rows) {
             const { id, account_id, account_name, health_webhook, health_auth_key } = row;
-            const check = await axios.get(health_webhook, {
-                headers: {
-                    'Health-Auth-Key': health_auth_key
-                }
-            });
-            if (check.status === 200) {
-                successful_checks++;
-                success_cases.push({
-                    id: id,
-                    account_id: account_id,
-                    account_name: account_name,
-                    health_webhook: health_webhook,
-                    health_auth_key: health_auth_key
+            let check;
+            try {
+                check = await axios.get(health_webhook, {
+                    headers: {
+                        'Health-Auth-Key': health_auth_key
+                    }
                 });
-            } else {
+                if (check.status === 200) {
+                    successful_checks++;
+                    success_cases.push(row);
+                } else {
+                    failed_checks++;
+                    failed_cases.push(row);
+                }
+            } catch (error) {
+                console.error('❌ Error en la llamada con codigo de estado:', error.response.status, 'y mensaje:', error.message);
                 failed_checks++;
                 failed_cases.push(row);
             }
